@@ -21,6 +21,10 @@ app.use('/api/download-from',  downloadFromRoutes);
 app.use('/api/final-goal', finalGoalRoutes);
 app.use('/api/activity-frequency', activityFrequencyRoute);
 
+// Swagger
+const setupSwagger = require('./swagger');
+setupSwagger(app);
+
 // Démarrer le serveur
 app.listen(port, () => {
     console.log(`Serveur démarré sur http://localhost:${port}`);

@@ -13,6 +13,8 @@ Initialiser npm sur le projet et installer les dépendences
 ```bash
   npm init -y
   npm install express cors body-parser mysql2 dotenv
+  // Swagger
+  npm install swagger-jsdoc swagger-ui-express
 ```
 
 ## Serveur
