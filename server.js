@@ -11,11 +11,13 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Import des routes
+const authRoutes = require('./routes/authRoutes');
 const downloadReasonRoutes = require('./routes/downloadReason');
 const downloadFromRoutes = require('./routes/downloadFrom');
 const finalGoalRoutes = require('./routes/finalGoal');
 const activityFrequencyRoute = require('./routes/activityFrequency');
 
+app.use('/api/auth', authRoutes);
 app.use('/api/download-reason', downloadReasonRoutes);
 app.use('/api/download-from',  downloadFromRoutes);
 app.use('/api/final-goal', finalGoalRoutes);

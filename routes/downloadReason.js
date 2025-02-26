@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db'); // Importer la connexion MySQL
+const authMiddleware = require('../middleware/authMiddleware');
 
 /**
  * @swagger
@@ -27,8 +28,7 @@ const db = require('../db'); // Importer la connexion MySQL
  *       500:
  *         description: Erreur serveur
  */
-
-router.get('/', (req, res) => {
+router.get('/', authMiddleware, (req, res) => {
     db.query('SELECT * FROM download_reasons', (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des données:', err);
