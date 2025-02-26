@@ -107,34 +107,50 @@ exports.appleAuth = async (req, res) => {
 };
 
 // 🔐 Inscription
-exports.register = (req, res) => {
-    const { name, lastname, email, password, sex } = req.body;
+exports.register = async (req, res) => {
+    try {
+        // 🔄 Fusionner les valeurs reçues avec les valeurs par défaut
+        const userData = {...req.body };
 
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email et mot de passe requis' });
-    }
+        // 🛑 Vérification des champs obligatoires
+        if (!userData.email || (!userData.password && userData.provider === 'local')) {
+            return res.status(400).json({ error: 'Email et mot de passe requis' });
+        }
 
-    db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
-        if (results.length > 0) {
+        // 🔍 Vérifier si l'utilisateur existe déjà
+        const [existingUser] = await db.promise().query('SELECT * FROM users WHERE email = ?', [userData.email]);
+        if (existingUser.length > 0) {
             return res.status(400).json({ error: 'Cet email est déjà utilisé' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // 🔐 Hasher le mot de passe seulement si l'inscription est "local"
+        if (userData.provider === 'local') {
+            userData.password = await bcrypt.hash(userData.password, 10);
+        } else {
+            userData.password = null; // Pour Google/Apple, pas besoin de mot de passe
+        }
 
-        db.query(
-            'INSERT INTO users (name, lastname, email, password, sex) VALUES (?, ?, ?, ?, ?)',
-            [name, lastname, email, hashedPassword, sex],
-            (err, result) => {
-                if (err) return res.status(500).json({ error: 'Erreur serveur' });
+        // 📝 Génération des clés et valeurs dynamiquement
+        const columns = Object.keys(userData).join(', ');
+        const placeholders = Object.keys(userData).map(() => '?').join(', ');
+        const values = Object.values(userData);
 
-                const user = { id: result.insertId, email };
-                const accessToken = generateAccessToken(user);
-                const refreshToken = generateRefreshToken(user);
-
-                res.status(201).json({ accessToken, refreshToken });
-            }
+        // 💾 Insertion dans la BDD
+        const [result] = await db.promise().query(
+            `INSERT INTO users (${columns}) VALUES (${placeholders})`,
+            values
         );
-    });
+
+        // 🔑 Génération des tokens
+        const user = { id: result.insertId, email: userData.email };
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+
+        res.status(201).json({ accessToken, refreshToken });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
 };
 
 // 🔑 Connexion
