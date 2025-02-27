@@ -1,6 +1,6 @@
 const userModel = require('../models/userModel');
 
-// 📌 Récupérer le profil d'un utilisateur connecté
+// Récupérer le profil d'un utilisateur connecté
 exports.getUserProfile = async (req, res) => {
     try {
         const userIdFromToken = req.user.id; // ID du token (utilisateur connecté)
@@ -23,7 +23,7 @@ exports.getUserProfile = async (req, res) => {
     }
 };
 
-// 📌 Mettre à jour un utilisateur
+// Mettre à jour un utilisateur
 exports.updateUser = async (req, res) => {
     try {
         const userId = req.params.id;
@@ -39,7 +39,7 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-// 📌 Supprimer un utilisateur
+// Supprimer un utilisateur
 exports.deleteUser = async (req, res) => {
     try {
         const userId = req.params.id;
@@ -54,7 +54,7 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
-// 📌 Récupérer tous les utilisateurs
+// Récupérer tous les utilisateurs
 exports.getAllUsers = async (req, res) => {
     try {
         const users = await userModel.findAll();
@@ -62,5 +62,30 @@ exports.getAllUsers = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Erreur serveur" });
+    }
+};
+
+exports.updateWeight = async (req, res) => {
+    try {
+        const userId = req.user.id; 
+        const { newWeight } = req.body;
+
+        if (!newWeight) {
+            return res.status(400).json({ error: "Le poids est requis." });
+        }
+
+        // Vérifie si une entrée existe pour aujourd'hui
+        const existingEntryId = await userModel.getTodayWeightEntry(userId);
+
+        if (existingEntryId) {
+            await userModel.updateWeightEntry(existingEntryId, newWeight);
+        } else {
+            await userModel.addWeightEntry(userId, newWeight);
+        }
+
+        res.json({ success: true, message: "Poids mis à jour avec succès." });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur serveur." });
     }
 };
