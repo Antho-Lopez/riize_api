@@ -9,7 +9,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // Générer un token d'accès (expire vite)
 const generateAccessToken = (user) => {
     return jwt.sign(
-        { id: user.id, email: user.email },
+        { id: user.id, email: user.email, role: user.role },
         process.env.JWT_ACCESS_SECRET,
         { expiresIn: process.env.JWT_ACCESS_EXPIRES }
     );
@@ -18,13 +18,14 @@ const generateAccessToken = (user) => {
 // Générer un Refresh Token (expire après 30 jours)
 const generateRefreshToken = (user) => {
     return jwt.sign(
-        { id: user.id, email: user.email },
+        { id: user.id, email: user.email, role: user.role },
         process.env.JWT_REFRESH_SECRET,
         { expiresIn: process.env.JWT_REFRESH_EXPIRES }
     );
 };
 
 // 🟢 Authentification avec Google
+// peut être qu'il faudra AJOUTER LE ROLE POUR L'AUTH GOOGLE ET APPLE
 exports.googleAuth = async (req, res) => {
     const { token } = req.body;
 
@@ -142,7 +143,7 @@ exports.register = async (req, res) => {
         );
 
         // 🔑 Génération des tokens
-        const user = { id: result.insertId, email: userData.email };
+        const user = { id: result.insertId, email: userData.email, role: userData.role };
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
 
@@ -190,7 +191,7 @@ exports.refreshToken = (req, res) => {
 
     try {
         const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-        const newAccessToken = generateAccessToken({ id: decoded.id, email: decoded.email });
+        const newAccessToken = generateAccessToken({ id: decoded.id, email: decoded.email, role: decoded.role });
 
         res.json({ accessToken: newAccessToken });
     } catch (err) {
