@@ -20,4 +20,8 @@ router.get('/', authMiddleware, isAdminMiddleware, userController.getAllUsers);
 // Gestion de l'historique de poids de l'utilisateur
 router.post('/update-weight/:id', authMiddleware, canAccessResource('users', 'id'), userController.updateWeight);
 
+// Récupérer l'historique des poids d'un utilisateur
+router.get('/weight-history/:id', authMiddleware, canAccessResource('users', 'id'), userController.getUserWeightHistory);
+
+
 module.exports = router;

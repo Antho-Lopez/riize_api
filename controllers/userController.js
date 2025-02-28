@@ -89,3 +89,23 @@ exports.updateWeight = async (req, res) => {
         res.status(500).json({ error: "Erreur serveur." });
     }
 };
+
+// Récupérer l'historique des poids d'un utilisateur
+exports.getUserWeightHistory = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // Vérifier si l'utilisateur existe
+        const userExists = await userModel.findById(userId);
+        if (!userExists) {
+            return res.status(404).json({ error: "Utilisateur non trouvé." });
+        }
+
+        // Récupérer l'historique des poids
+        const weightHistory = await userModel.getUserWeightHistory(userId);
+        res.json(weightHistory);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur serveur." });
+    }
+};

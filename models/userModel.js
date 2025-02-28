@@ -70,3 +70,13 @@ exports.addInitialWeight = async (userId, initialWeight) => {
         [userId, initialWeight]
     );
 };
+
+// 📌 Récupérer l'historique des poids d'un utilisateur
+exports.getUserWeightHistory = async (userId) => {
+    const [history] = await db.promise().query(
+        'SELECT weight, recorded_at FROM user_weight_history WHERE user_id = ? ORDER BY recorded_at DESC',
+        [userId]
+    );
+    return history;
+};
+
