@@ -2,6 +2,7 @@ const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
+const userModel = require('../models/userModel');
 require('dotenv').config();
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -141,6 +142,8 @@ exports.register = async (req, res) => {
             `INSERT INTO users (${columns}) VALUES (${placeholders})`,
             values
         );
+        
+        await userModel.addInitialWeight(result.insertId, userData.weight);
 
         // 🔑 Génération des tokens
         const user = { id: result.insertId, email: userData.email, role: userData.role };

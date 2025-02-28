@@ -67,7 +67,7 @@ exports.getAllUsers = async (req, res) => {
 
 exports.updateWeight = async (req, res) => {
     try {
-        const userId = req.user.id; 
+        const userId = req.params.id; 
         const { newWeight } = req.body;
 
         if (!newWeight) {
