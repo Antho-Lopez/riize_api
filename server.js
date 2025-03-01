@@ -18,6 +18,7 @@ const finalGoalRoutes = require('./routes/finalGoal');
 const activityFrequencyRoute = require('./routes/activityFrequency');
 const userRoutes = require('./routes/userRoutes');
 const muscles = require('./routes/muscles');
+const trainingRoutes = require('./routes/trainingRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/download-reason', downloadReasonRoutes);
@@ -26,6 +27,7 @@ app.use('/api/final-goal', finalGoalRoutes);
 app.use('/api/activity-frequency', activityFrequencyRoute);
 app.use('/api/users', userRoutes);
 app.use('/api/muscles', muscles);
+app.use('/api/trainings', trainingRoutes);
 
 // Swagger
 const setupSwagger = require('./swagger');
