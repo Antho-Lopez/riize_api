@@ -4,8 +4,6 @@
 API pour l'application mobile "Riize"
 
 
-
-
 ## Versions
 - Node : 22.13.0
 - npm : 10.9.2
@@ -17,13 +15,21 @@ Initialiser npm sur le projet et installer les dépendences
 
 ```bash
   npm init -y
-  npm install express cors body-parser mysql2 dotenv
-  // Swagger
-  npm install swagger-jsdoc swagger-ui-express
-  // jsonwebtoken et bcrypt
-  npm install jsonwebtoken bcryptjs
-  // Google auth 
-  npm install google-auth-library
+  npm ci
+```
+
+## Liste des dépendances  
+
+```bash
+  Express
+  Cors
+  BodyParser
+  Mysql2
+  Dotenv
+  Swagger
+  JsonWebToken
+  BcryptJS
+  GoogleAuthLibrary
 ```
 
 ## Serveur
