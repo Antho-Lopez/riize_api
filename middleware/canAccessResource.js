@@ -1,11 +1,11 @@
 const db = require('../db');
 
-module.exports = (resourceTable, resourceUserIdField) => {
+module.exports = (resourceTable, resourceUserIdField, idParam = "id") => {
     return async (req, res, next) => {
         try {
             const userIdFromToken = req.user.id; // ID utilisateur connecté
             const userRole = req.user.role; // Rôle de l'utilisateur
-            const resourceId = parseInt(req.params.id, 10); // ID de la ressource demandée
+            const resourceId = parseInt(req.params[idParam], 10); // ID de la ressource demandée
 
             if (isNaN(resourceId)) {
                 return res.status(400).json({ error: "ID invalide." });
