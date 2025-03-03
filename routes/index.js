@@ -10,6 +10,7 @@ const userRoutes = require('./userRoutes');
 const musclesRoutes = require('./muscles');
 const trainingRoutes = require('./trainingRoutes');
 const trainingSessionRoutes = require('./trainingSessionRoutes');
+const exerciseRoutes = require('./exerciseRoutes');
 
 // Définition des routes
 router.use('/auth', authRoutes);
@@ -21,5 +22,6 @@ router.use('/users', userRoutes);
 router.use('/muscles', musclesRoutes);
 router.use('/trainings', trainingRoutes);
 router.use('/training-sessions', trainingSessionRoutes);
+router.use('/exercises', exerciseRoutes);
 
 module.exports = router;
