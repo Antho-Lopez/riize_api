@@ -22,12 +22,12 @@ const swaggerDefinition = {
   ],
   tags: [
     { name: "Authentification", description: "Routes pour l'authentification des utilisateurs" },
+    { name: "Register infos", description: "Autres données utilisées dans l'application" },
     { name: "Users", description: "Gestion des utilisateurs" },
     { name: "Trainings", description: "Gestion des entraînements" },
     { name: "Training Sessions", description: "Gestion des sessions d'entraînement" },
     { name: "Exercises", description: "Gestion des exercices" },
     { name: "Repetitions", description: "Gestion des répétitions" },
-    { name: "Miscellaneous", description: "Autres données utilisées dans l'application" },
   ],
   paths: {
     "/auth/google": {
@@ -129,6 +129,58 @@ const swaggerDefinition = {
         },
       },
     },
+    
+    "/activity-frequency": {
+      get: {
+        summary: "Récupérer toutes les fréquences d'activité",
+        tags: ["Register infos"],
+        responses: {
+          200: { description: "Liste des fréquences d'activité récupérée" },
+          500: { description: "Erreur serveur" },
+        },
+      },
+    },
+    "/download-from": {
+      get: {
+        summary: "Récupérer toutes les fréquences d'activité",
+        tags: ["Register infos"],
+        responses: {
+          200: { description: "Liste des différentes fréquences d'activité possible" },
+          500: { description: "Erreur serveur" },
+        },
+      },
+    },
+    "/download-reason": {
+      get: {
+        summary: "Récupérer toutes les raisons de téléchargement de l'application",
+        tags: ["Register infos"],
+        responses: {
+          200: { description: "Liste des raisons de téléchargement" },
+          500: { description: "Erreur serveur" },
+        },
+      },
+    },
+    "/final-goal": {
+      get: {
+        summary: "Récupérer les objectifs disponibles pour les utilisateurs",
+        tags: ["Register infos"],
+        responses: {
+          200: { description: "Liste des objectifs disponibles" },
+          500: { description: "Erreur serveur" },
+        },
+      },
+    },
+    "/muscles": {
+      get: {
+        summary: "Récupérer la liste des muscles",
+        tags: ["Register infos"],
+        responses: {
+          200: { description: "Liste des muscles récupérée" },
+          500: { description: "Erreur serveur" },
+        },
+      },
+    },
+
     "/users/{id}": {
       get: {
         summary: "Récupérer le profil d'un utilisateur",
@@ -405,48 +457,256 @@ const swaggerDefinition = {
       }
     },
 
-
-
+    "/exercises/by-training/{training_id}": {
+      get: {
+        summary: "Récupérer la liste des exercices d'un entraînement",
+        tags: ["Exercises"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "training_id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
+        responses: {
+          200: { description: "Liste des exercices récupérée" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Entraînement non trouvé" }
+        }
+      }
+    },
+    "/exercises/{id}": {
+      get: {
+        summary: "Récupérer les détails d'un exercice",
+        tags: ["Exercises"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
+        responses: {
+          200: { description: "Détails de l'exercice récupérés" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Exercice non trouvé" }
+        }
+      }
+    },
     "/exercises/create": {
       post: {
         summary: "Créer un exercice",
         tags: ["Exercises"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["training_id", "name"],
+                properties: {
+                  training_id: { type: "integer", example: 1 },
+                  muscle_id: { type: "integer", example: 5 },
+                  name: { type: "string", example: "Développé couché" },
+                  default_weight: { type: "number", format: "decimal", example: 80.5 }
+                }
+              }
+            }
+          }
+        },
         responses: {
           201: { description: "Exercice créé avec succès" },
           400: { description: "Erreur lors de la création" },
-        },
-      },
+          403: { description: "Accès refusé (Token manquant ou invalide)" }
+        }
+      }
     },
+    "/exercises/edit/{id}": {
+      put: {
+        summary: "Modifier un exercice",
+        tags: ["Exercises"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  muscle_id: { type: "integer", example: 3 },
+                  name: { type: "string", example: "Développé militaire" },
+                  default_weight: { type: "number", format: "decimal", example: 60.0 }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: "Exercice mis à jour avec succès" },
+          400: { description: "Erreur lors de la mise à jour" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Exercice non trouvé" }
+        }
+      }
+    },
+    "/exercises/delete/{id}": {
+      delete: {
+        summary: "Supprimer un exercice (soft delete)",
+        tags: ["Exercises"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
+        responses: {
+          200: { description: "Exercice supprimé avec succès" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Exercice non trouvé" }
+        }
+      }
+    },
+
     "/repetitions/create": {
       post: {
-        summary: "Ajouter une répétition à un exercice",
+        summary: "Créer une répétition",
         tags: ["Repetitions"],
-        responses: {
-          201: { description: "Répétition ajoutée" },
-          400: { description: "Erreur lors de l'ajout" },
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["session_id", "exercise_id", "reps"],
+                properties: {
+                  session_id: { type: "integer", example: 2 },
+                  exercise_id: { type: "integer", example: 5 },
+                  reps: { type: "integer", example: 10 },
+                  weight: { type: "number", format: "decimal", example: 80.5 }
+                }
+              }
+            }
+          }
         },
-      },
+        responses: {
+          201: { description: "Répétition créée avec succès" },
+          400: { description: "Erreur lors de la création" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" }
+        }
+      }
     },
-    "/activity-frequency": {
+    "/repetitions/edit/{id}": {
+      put: {
+        summary: "Modifier une répétition",
+        tags: ["Repetitions"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  reps: { type: "integer", example: 12 },
+                  weight: { type: "number", format: "decimal", example: 85.0 }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: "Répétition mise à jour avec succès" },
+          400: { description: "Erreur lors de la mise à jour" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Répétition non trouvée" }
+        }
+      }
+    },
+    "/repetitions/delete/{id}": {
+      delete: {
+        summary: "Supprimer une répétition",
+        tags: ["Repetitions"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
+        responses: {
+          200: { description: "Répétition supprimée avec succès" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Répétition non trouvée" }
+        }
+      }
+    },
+    "/repetitions/by-session/{session_id}": {
       get: {
-        summary: "Récupérer toutes les fréquences d'activité",
-        tags: ["Miscellaneous"],
+        summary: "Récupérer la liste des répétitions d'une session",
+        tags: ["Repetitions"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "session_id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
         responses: {
-          200: { description: "Liste des fréquences d'activité récupérée" },
-          500: { description: "Erreur serveur" },
-        },
-      },
+          200: { description: "Liste des répétitions récupérée" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Session non trouvée" }
+        }
+      }
     },
-    "/muscles": {
+    "/repetitions/by-exercise/{exercise_id}": {
       get: {
-        summary: "Récupérer la liste des muscles",
-        tags: ["Miscellaneous"],
+        summary: "Récupérer la liste des répétitions d'un exercice",
+        tags: ["Repetitions"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "exercise_id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
         responses: {
-          200: { description: "Liste des muscles récupérée" },
-          500: { description: "Erreur serveur" },
-        },
-      },
-    },
+          200: { description: "Liste des répétitions récupérée" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Exercice non trouvé" }
+        }
+      }
+    }
   },
 };
 
