@@ -45,6 +45,40 @@ const swaggerDefinition = {
       post: {
         summary: "Inscription d'un utilisateur",
         tags: ["Authentification"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  name: { type: "string", example: "John" },
+                  lastname: { type: "string", example: "Doe" },
+                  email: { type: "string", format: "email", example: "john.doe@example.com" },
+                  password: { type: "string", format: "password", example: "SuperSecret123" },
+                  role: { type: "string", enum: ["admin", "user"], default: "user", example: "user" },
+                  goal_weight: { type: "number", format: "decimal", example: 70.5 },
+                  weight: { type: "number", format: "decimal", example: 75.0 },
+                  weight_unit: { type: "string", enum: ["kg", "lb"], default: "kg", example: "kg" },
+                  height: { type: "number", format: "decimal", example: 180.0 },
+                  height_unit: { type: "string", enum: ["cm", "ft-in"], default: "cm", example: "cm" },
+                  birth_date: { type: "string", format: "date", example: "1995-08-15" },
+                  sex: { type: "string", enum: ["male", "female"], example: "male" },
+                  city: { type: "string", example: "Paris" },
+                  streak: { type: "integer", default: 0, example: 0 },
+                  profile_picture: { type: "string", format: "url", example: "https://example.com/profile.jpg" },
+                  provider: { type: "string", enum: ["local", "google", "apple"], default: "local", example: "local" },
+                  provider_id: { type: "string", nullable: true, example: "123456789" },
+                  activity_frequency_id: { type: "integer", nullable: true, example: 1 },
+                  final_goal_id: { type: "integer", nullable: true, example: 2 },
+                  download_reason_id: { type: "integer", nullable: true, example: 3 },
+                  download_from_id: { type: "integer", nullable: true, example: 4 }
+                },
+                required: ["name", "lastname", "email", "password", "sex"]
+              }
+            }
+          }
+        },
         responses: {
           201: { description: "Utilisateur créé avec succès" },
           400: { description: "Erreur lors de l'inscription" },
@@ -55,6 +89,21 @@ const swaggerDefinition = {
       post: {
         summary: "Connexion utilisateur",
         tags: ["Authentification"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  email: { type: "string", format: "email", example: "john.doe@example.com" },
+                  password: { type: "string", format: "password", example: "SuperSecret123" },
+                },
+                required: ["email", "password"]
+              }
+            }
+          }
+        },
         responses: {
           200: { description: "Connexion réussie" },
           401: { description: "Identifiants incorrects" },
