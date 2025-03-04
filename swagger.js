@@ -5,6 +5,15 @@ const swaggerDefinition = {
     description: "Documentation de l'API pour la gestion des entraînements, exercices, sessions, utilisateurs et autres entités.",
     version: "1.0.0",
   },
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT"
+      }
+    }
+  },
   servers: [
     {
       url: "http://localhost:3000/api",
@@ -124,6 +133,11 @@ const swaggerDefinition = {
       get: {
         summary: "Récupérer le profil d'un utilisateur",
         tags: ["Users"],
+        security: [
+          {
+            bearerAuth: []
+          }
+        ],
         parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
         responses: {
           200: { description: "Profil utilisateur récupéré" },
@@ -136,6 +150,11 @@ const swaggerDefinition = {
       put: {
         summary: "Modification d'un utilisateur",
         tags: ["Users"],
+        security: [
+          {
+            bearerAuth: []
+          }
+        ],
         parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
         responses: {
           200: { description: "Utilisateur modifié" },
@@ -148,6 +167,11 @@ const swaggerDefinition = {
       delete: {
         summary: "Suppression d'un utilisateur",
         tags: ["Users"],
+        security: [
+          {
+            bearerAuth: []
+          }
+        ],
         parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
         responses: {
           200: { description: "Utilisateur supprimé" },
@@ -160,9 +184,30 @@ const swaggerDefinition = {
       get: {
         summary: "Récupérer les entraînements d'un utilisateur",
         tags: ["Trainings"],
+        security: [
+          {
+            bearerAuth: []
+          }
+        ],
         responses: {
           200: { description: "Liste des entraînements récupérée" },
           403: { description: "Accès refusé" },
+        },
+      },
+    },
+    "/trainings/{id}": {
+      get: {
+        summary: "Détails d'un entraînement",
+        tags: ["Trainings"],
+        security: [
+          {
+            bearerAuth: []
+          }
+        ],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: {
+          201: { description: "Détails de l'entrainement" },
+          400: { description: "Erreur lors de la récupération" },
         },
       },
     },
@@ -170,12 +215,68 @@ const swaggerDefinition = {
       post: {
         summary: "Créer un entraînement",
         tags: ["Trainings"],
+        security: [
+          {
+            bearerAuth: []
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["name", "recurrence_type"],
+                properties: {
+                  name: { type: "string", example: "Full Body Workout" },
+                  recurrence_type: { type: "string", enum: ["daily", "weekly"], example: "weekly" },
+                  recurrence_value: { type: "string", example: "Monday, Wednesday, Friday" },
+                  daily_start_date: { type: "string", format: "date", example: "2024-03-10" },
+                  training_img: { type: "string", example: "image.jpg" }
+                }
+              }
+            }
+          }
+        },
         responses: {
           201: { description: "Entraînement créé avec succès" },
           400: { description: "Erreur lors de la création" },
         },
       },
     },
+    "/trainings/edit/{id}": {
+      put: {
+        summary: "Créer un entraînement",
+        tags: ["Trainings"],
+        security: [
+          {
+            bearerAuth: []
+          }
+        ],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: {
+          201: { description: "Entraînement créé avec succès" },
+          400: { description: "Erreur lors de la création" },
+        },
+      },
+    },
+    "/trainings/delete/{id}": {
+      delete: {
+        summary: "Suppression d'un entrainement",
+        tags: ["Trainings"],
+        security: [
+          {
+            bearerAuth: []
+          }
+        ],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: {
+          201: { description: "Entraînement supprimé avec succès" },
+          400: { description: "Erreur lors de la création" },
+        },
+      },
+    },
+
     "/training-sessions/create": {
       post: {
         summary: "Créer une session d'entraînement",
