@@ -277,16 +277,136 @@ const swaggerDefinition = {
       },
     },
 
+    "/training-sessions/by-training/{training_id}": {
+      get: {
+        summary: "Récupérer toutes les sessions d'un entraînement",
+        tags: ["Training Sessions"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "training_id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
+        responses: {
+          200: { description: "Liste des sessions récupérée" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Entraînement non trouvé" }
+        }
+      }
+    },
+    "/training-sessions/{id}": {
+      get: {
+        summary: "Récupérer les détails d'une session d'entraînement",
+        tags: ["Training Sessions"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
+        responses: {
+          200: { description: "Détails de la session récupérés" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Session non trouvée" }
+        }
+      }
+    },
     "/training-sessions/create": {
       post: {
         summary: "Créer une session d'entraînement",
         tags: ["Training Sessions"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["training_id"],
+                properties: {
+                  training_id: { type: "integer", example: 1 },
+                  notes: { type: "string", example: "Super séance aujourd'hui !" },
+                  start_time: { type: "string", format: "time", example: "10:00:00" },
+                  end_time: { type: "string", format: "time", example: "11:00:00" },
+                  training_date: { type: "string", format: "date", example: "2024-03-10" }
+                }
+              }
+            }
+          }
+        },
         responses: {
           201: { description: "Session créée avec succès" },
           400: { description: "Erreur lors de la création" },
-        },
-      },
+          403: { description: "Accès refusé (Token manquant ou invalide)" }
+        }
+      }
     },
+    "/training-sessions/edit/{id}": {
+      put: {
+        summary: "Modifier une session d'entraînement",
+        tags: ["Training Sessions"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  notes: { type: "string", example: "Ajout de notes supplémentaires" },
+                  start_time: { type: "string", format: "time", example: "09:30:00" },
+                  end_time: { type: "string", format: "time", example: "10:30:00" },
+                  training_date: { type: "string", format: "date", example: "2024-03-12" }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: "Session mise à jour avec succès" },
+          400: { description: "Erreur lors de la mise à jour" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Session non trouvée" }
+        }
+      }
+    },
+    "/training-sessions/delete/{id}": {
+      delete: {
+        summary: "Supprimer une session d'entraînement (soft delete)",
+        tags: ["Training Sessions"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" }
+          }
+        ],
+        responses: {
+          200: { description: "Session supprimée avec succès" },
+          403: { description: "Accès refusé (Token manquant ou invalide)" },
+          404: { description: "Session non trouvée" }
+        }
+      }
+    },
+
+
+
     "/exercises/create": {
       post: {
         summary: "Créer un exercice",
