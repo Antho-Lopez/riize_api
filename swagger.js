@@ -232,6 +232,53 @@ const swaggerDefinition = {
         },
       },
     },
+    "/users/weight-history/{id}": {
+      get: {
+        summary: "Récupérer l'historique de poids d'un utilisateur",
+        tags: ["Users"],
+        security: [
+          {
+            bearerAuth: []
+          }
+        ],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: {
+          200: { description: "Liste de l'historique de poids récupéré" },
+          403: { description: "Accès refusé" },
+        },
+      },
+    },
+    "/users/update-weight/{id}": {
+      post: {
+        summary: "Ajout d'une nouvelle valeur de poids ",
+        tags: ["Users"],
+        security: [
+          {
+            bearerAuth: []
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["newWeight"],
+                properties: {
+                  newWeight: { type: "float", example: 54.20 }
+                }
+              }
+            }
+          }
+        },
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: {
+          201: { description: "Entraînement créé avec succès" },
+          400: { description: "Erreur lors de la création" },
+        },
+      },
+    },
+
     "/trainings": {
       get: {
         summary: "Récupérer les entraînements d'un utilisateur",
