@@ -162,19 +162,24 @@ exports.login = (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ error: 'Email et mot de passe requis' });
+        return res.status(400).json({ error: "Email et mot de passe requis" });
     }
 
-    db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+    db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
+        if (err) {
+            console.error("Erreur SQL :", err);
+            return res.status(500).json({ error: "Erreur serveur" });
+        }
+
         if (results.length === 0) {
-            return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+            return res.status(404).json({ error: "Email introuvable" });
         }
 
         const user = results[0];
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+            return res.status(401).json({ error: "Mot de passe incorrect" });
         }
 
         const accessToken = generateAccessToken(user);
@@ -183,6 +188,7 @@ exports.login = (req, res) => {
         res.json({ accessToken, refreshToken });
     });
 };
+
 
 // 🔄 Rafraîchir un token
 exports.refreshToken = (req, res) => {
