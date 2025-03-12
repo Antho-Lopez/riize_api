@@ -6,7 +6,7 @@ const isAdminMiddleware = require('../middleware/isAdminMiddleware');
 const canAccessResource = require('../middleware/canAccessResource');
 
 // Récupérer le profil de l'utilisateur connecté
-router.get('/:id', authMiddleware, canAccessResource('users', 'id'), userController.getUserProfile);
+router.get('/me', authMiddleware, userController.getUserProfile);
 
 // Mettre à jour un utilisateur
 router.put('/edit/:id', authMiddleware, canAccessResource('users', 'id'), userController.updateUser);

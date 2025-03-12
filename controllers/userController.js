@@ -5,15 +5,7 @@ const db = require('../db');
 exports.getUserProfile = async (req, res) => {
     try {
         const userIdFromToken = req.user.id; // ID du token (utilisateur connecté)
-        const userRole = req.user.role; // Rôle de l'utilisateur
-        const requestedUserId = parseInt(req.params.id); // ID dans l'URL
-
-        // Seul l'utilisateur lui-même ou un admin peut voir un profil
-        if (userIdFromToken !== requestedUserId && userRole !== 'admin') {
-            return res.status(403).json({ error: "Accès interdit." });
-        }
-
-        const user = await userModel.findById(requestedUserId);
+        const user = await userModel.findById(userIdFromToken);
 
         if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
 
