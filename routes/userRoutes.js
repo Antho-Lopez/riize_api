@@ -23,5 +23,7 @@ router.post('/update-weight/:id', authMiddleware, canAccessResource('users', 'id
 // Récupérer l'historique des poids d'un utilisateur
 router.get('/weight-history/:id', authMiddleware, canAccessResource('users', 'id'), userController.getUserWeightHistory);
 
+// Récupérer uniquement la streak d'un utilisateur (propriétaire ou admin)
+router.get('/streak/:id', authMiddleware, canAccessResource('users', 'id'), userController.getUserStreak);
 
 module.exports = router;

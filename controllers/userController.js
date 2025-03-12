@@ -1,4 +1,5 @@
 const userModel = require('../models/userModel');
+const db = require('../db');
 
 // Récupérer le profil d'un utilisateur connecté
 exports.getUserProfile = async (req, res) => {
@@ -108,4 +109,22 @@ exports.getUserWeightHistory = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Erreur serveur." });
     }
+};
+
+// Récupérer seulement la streak de l'utilisateur
+exports.getUserStreak = (req, res) => {
+    const { id } = req.params;
+
+    db.query("SELECT streak FROM users WHERE id = ?", [id], (err, results) => {
+        if (err) {
+            console.error("Erreur SQL :", err);
+            return res.status(500).json({ error: "Erreur serveur" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: "Utilisateur non trouvé" });
+        }
+
+        res.json({ streak: results[0].streak });
+    });
 };
