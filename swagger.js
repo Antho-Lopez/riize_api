@@ -330,7 +330,7 @@ const swaggerDefinition = {
                   name: { type: "string", example: "Full Body Workout" },
                   recurrence_type: { type: "string", enum: ["daily", "weekly"], example: "weekly" },
                   recurrence_value: { type: "string", example: "Monday, Wednesday, Friday" },
-                  daily_start_date: { type: "string", format: "date", example: "2024-03-10" },
+                  start_date: { type: "string", format: "date", example: "2024-03-10" },
                   training_img: { type: "string", example: "image.jpg" }
                 }
               }

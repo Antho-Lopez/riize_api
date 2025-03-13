@@ -75,3 +75,17 @@ exports.deleteTraining = async (req, res) => {
         res.status(500).json({ error: "Erreur serveur." });
     }
 };
+
+exports.getTodayTraining = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const training = await trainingModel.getTodayTraining(userId);
+        if (!training) {
+            return res.status(404).json({ error: "Aucun entraînement prévu pour aujourd'hui." });
+        }
+        res.json(training);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur serveur." });
+    }
+};
