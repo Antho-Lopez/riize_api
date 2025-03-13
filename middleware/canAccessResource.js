@@ -6,7 +6,7 @@ module.exports = (resourceTable, resourceUserIdField, idParam = "id") => {
             const userIdFromToken = req.user.id; // ID utilisateur connecté
             const userRole = req.user.role; // Rôle de l'utilisateur
             const resourceId = parseInt(req.params[idParam], 10); // ID de la ressource demandée
-            console.log('je passe ?');
+            
             if (isNaN(resourceId)) {
                 return res.status(400).json({ error: "ID invalide." });
             }
