@@ -71,7 +71,7 @@ exports.updateWeight = async (req, res) => {
         const existingEntryId = await userModel.getTodayWeightEntry(userId);
 
         if (existingEntryId) {
-            await userModel.updateWeightEntry(existingEntryId, newWeight);
+            await userModel.updateWeightEntry(existingEntryId, newWeight, userId);
         } else {
             await userModel.addWeightEntry(userId, newWeight);
         }

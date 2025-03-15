@@ -81,7 +81,7 @@ exports.getTodayTraining = async (req, res) => {
         const userId = req.user.id;
         const training = await trainingModel.getTodayTraining(userId);
         if (!training) {
-            return res.status(404).json({ error: "Aucun entraînement prévu pour aujourd'hui." });
+            return res.json([]);
         }
         res.json(training);
     } catch (err) {

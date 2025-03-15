@@ -46,11 +46,20 @@ exports.getTodayWeightEntry = async (userId) => {
 };
 
 // Met à jour le poids existant pour aujourd'hui
-exports.updateWeightEntry = async (entryId, newWeight) => {
+exports.updateWeightEntry = async (entryId, newWeight, userId) => {
     const [result] = await db.promise().query(
         'UPDATE user_weight_history SET weight = ? WHERE id = ?',
         [newWeight, entryId]
     );
+
+    if (result.affectedRows > 0) {
+        console.log(userId, newWeight);
+        await db.promise().query(
+            'UPDATE users SET weight = ? WHERE id = ?',
+            [newWeight, userId]
+        );
+    }
+
     return result.affectedRows > 0;
 };
 
@@ -60,6 +69,14 @@ exports.addWeightEntry = async (userId, newWeight) => {
         'INSERT INTO user_weight_history (user_id, weight) VALUES (?, ?)',
         [userId, newWeight]
     );
+    
+    if (result.insertId) {
+        console.log(newWeight, userId);
+        await db.promise().query(
+            'UPDATE users SET weight = ? WHERE id = ?',
+            [newWeight, userId]
+        );
+    }
     return result.insertId;
 };
 
