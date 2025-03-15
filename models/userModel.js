@@ -53,7 +53,6 @@ exports.updateWeightEntry = async (entryId, newWeight, userId) => {
     );
 
     if (result.affectedRows > 0) {
-        console.log(userId, newWeight);
         await db.promise().query(
             'UPDATE users SET weight = ? WHERE id = ?',
             [newWeight, userId]
