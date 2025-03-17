@@ -7,6 +7,9 @@ const trainingSessionController = require('../controllers/trainingSessionControl
 // 📌 Récupérer toutes les sessions d'un training (propriétaire ou admin)
 router.get('/by-training/:training_id', authMiddleware, canAccessResource('trainings', 'user_id', 'training_id'), trainingSessionController.getSessionsByTrainingId);
 
+// 📌 Récupérer l'entraînement en cours de l'utilisateur
+router.get('/current', authMiddleware, trainingSessionController.getCurrentSession);
+
 // 📌 Créer une session (doit appartenir à l'utilisateur ou être admin)
 router.post('/create', authMiddleware, trainingSessionController.createSession);
 

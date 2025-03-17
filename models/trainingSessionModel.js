@@ -94,6 +94,19 @@ exports.getSessionById = async (sessionId, userId, userRole) => {
     return { success: true, status: 200, data: session };
 };
 
+exports.getCurrentSession = async (userId) => {
+    const [rows] = await db.promise().query(
+        `SELECT ts.* 
+        FROM training_sessions ts
+        JOIN trainings t ON ts.training_id = t.id
+        WHERE t.user_id = ? AND ts.start_time IS NOT NULL AND ts.end_time IS NULL
+        ORDER BY ts.start_time DESC
+        LIMIT 1`,
+        [userId]
+    );
+
+    return rows.length > 0 ? rows[0] : null;
+};
 
 // 📌 Soft delete d'une session
 exports.deleteSession = async (sessionId, userId, userRole) => {
