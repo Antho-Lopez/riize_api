@@ -10,9 +10,8 @@ exports.getExercisesByTrainingId = async (req, res) => {
         const result = await exerciseModel.getExercisesByTrainingId(trainingId, userId, userRole);
 
         if (result.error) {
-            return res.status(result.error === "Accès refusé." ? 403 : 404).json({ error: result.error });
+        return res.status(result.error === "Accès refusé." ? 403 : 404).json({ error: result.error });
         }
-
         res.json(result);
     } catch (err) {
         console.error(err);

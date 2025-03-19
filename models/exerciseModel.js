@@ -1,28 +1,84 @@
 const db = require('../db');
 
-// 📌 Voir la liste des exercices d'un entraînement
+// 📌 Voir la liste des exercices d'un entraînement, regroupés par muscle, avec répétitions
 exports.getExercisesByTrainingId = async (trainingId, userId, userRole) => {
-    // Vérifier si l'utilisateur a accès à l'entraînement
-    const [training] = await db.promise().query(
-        `SELECT user_id FROM trainings WHERE id = ? AND deleted_at IS NULL`,
+    // Vérifier l'accès à l'entraînement
+    const [trainingRows] = await db.promise().query(
+        `SELECT user_id, name, training_img FROM trainings WHERE id = ? AND deleted_at IS NULL`,
         [trainingId]
     );
-
-    if (training.length === 0) {
+    if (trainingRows.length === 0) {
         return { error: "Entraînement introuvable." };
     }
-
-    if (training[0].user_id !== userId && userRole !== 'admin') {
+    if (trainingRows[0].user_id !== userId && userRole !== 'admin') {
         return { error: "Accès refusé." };
     }
+    const trainingInfo = trainingRows[0];
 
-    // Récupérer les exercices si l'utilisateur a accès
+    // Récupérer les exercices, muscles et répétitions associés à l'entraînement
     const [rows] = await db.promise().query(
-        `SELECT * FROM exercises WHERE training_id = ? AND deleted_at IS NULL`,
+        `SELECT 
+            e.id AS exercise_id,
+            e.name AS exercise_name,
+            e.default_weight,
+            m.id AS muscle_id,
+            m.name AS muscle_name,
+            tse.id AS repetition_id,
+            tse.reps,
+            tse.weight AS rep_weight
+        FROM exercises e
+        JOIN muscles m ON e.muscle_id = m.id
+        LEFT JOIN training_session_exercise tse ON tse.exercise_id = e.id
+        WHERE e.training_id = ? AND e.deleted_at IS NULL`,
         [trainingId]
     );
 
-    return rows;
+    // Regrouper par muscle
+    const exercisesByMuscle = {};
+    rows.forEach(row => {
+        // Créer le groupe pour ce muscle s'il n'existe pas encore
+        if (!exercisesByMuscle[row.muscle_id]) {
+        exercisesByMuscle[row.muscle_id] = {
+            muscle: {
+            id: row.muscle_id,
+            name: row.muscle_name
+            },
+            exercises: {}
+        };
+        }
+        // Ajouter l'exercice s'il n'est pas déjà ajouté
+        if (row.exercise_id) {
+        if (!exercisesByMuscle[row.muscle_id].exercises[row.exercise_id]) {
+            exercisesByMuscle[row.muscle_id].exercises[row.exercise_id] = {
+            id: row.exercise_id,
+            name: row.exercise_name,
+            default_weight: row.default_weight,
+            repetitions: []
+            };
+        }
+        // Ajouter la répétition si présente
+        if (row.repetition_id) {
+            exercisesByMuscle[row.muscle_id].exercises[row.exercise_id].repetitions.push({
+            repetition_id: row.repetition_id,
+            reps: row.reps,
+            weight: row.rep_weight
+            });
+        }
+        }
+    });
+
+    // Convertir l'objet en tableau pour le format de réponse souhaité
+    const exercises_by_muscle = Object.values(exercisesByMuscle).map(group => {
+        group.exercises = Object.values(group.exercises);
+        return group;
+    });
+
+    return {
+        training_id: trainingId,
+        name: trainingInfo.name,
+        training_img: trainingInfo.training_img,
+        exercises_by_muscle: exercises_by_muscle
+    };
 };
 
 // 📌 Voir les détails d'un exercice
