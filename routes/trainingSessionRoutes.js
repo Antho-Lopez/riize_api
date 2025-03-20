@@ -10,6 +10,9 @@ router.get('/by-training/:training_id', authMiddleware, canAccessResource('train
 // 📌 Récupérer l'entraînement en cours de l'utilisateur
 router.get('/current', authMiddleware, trainingSessionController.getCurrentSession);
 
+// 📌 Récupérer la session d'entraînement du jour (terminée) pour l'utilisateur
+router.get('/today/completed', authMiddleware, trainingSessionController.getTodayCompletedSession);
+
 // 📌 Créer une session (doit appartenir à l'utilisateur ou être admin)
 router.post('/create', authMiddleware, trainingSessionController.createSession);
 

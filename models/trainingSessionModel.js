@@ -166,6 +166,34 @@ exports.getCurrentSession = async (userId) => {
     return session;
 };
 
+exports.getTodayCompletedSession = async (userId) => {
+    const query = `
+        SELECT 
+            t.id AS training_id,
+            t.name AS training_name,
+            t.training_img,
+            t.recurrence_type,
+            t.recurrence_value,
+            t.start_date,
+            ts.id AS session_id,
+            ts.notes,
+            ts.start_time,
+            ts.end_time,
+            ts.training_date,
+            ts.updated_at
+        FROM training_sessions ts
+        JOIN trainings t ON ts.training_id = t.id
+        WHERE t.user_id = ?
+            AND ts.training_date = CURDATE()
+            AND ts.end_time IS NOT NULL
+            AND ts.deleted_at IS NULL
+        LIMIT 1
+    `;
+
+    const [rows] = await db.promise().query(query, [userId]);
+    return rows.length > 0 ? rows[0] : null;
+};
+
 // 📌 Soft delete d'une session
 exports.deleteSession = async (sessionId, userId, userRole) => {
     // Vérifier que la session existe et récupérer son owner

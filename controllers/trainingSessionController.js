@@ -100,6 +100,21 @@ exports.getCurrentSession = async (req, res) => {
     }
 };
 
+exports.getTodayCompletedSession = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const completedSession = await trainingSessionModel.getTodayCompletedSession(userId);
+        
+        if (!completedSession) {
+            return res.json([]);
+        }
+        
+        res.json(completedSession);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur serveur." });
+    }
+};
 // 📌 Supprimer une session (soft delete)
 exports.deleteSession = async (req, res) => {
     try {
