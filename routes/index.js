@@ -12,7 +12,7 @@ const trainingRoutes = require('./trainingRoutes');
 const trainingSessionRoutes = require('./trainingSessionRoutes');
 const exerciseRoutes = require('./exerciseRoutes');
 const repetitionRoutes = require('./repetitionRoutes');
-
+const faq = require('./faq');
 // Définition des routes
 router.use('/auth', authRoutes);
 router.use('/download-reason', downloadReasonRoutes);
@@ -25,5 +25,6 @@ router.use('/trainings', trainingRoutes);
 router.use('/training-sessions', trainingSessionRoutes);
 router.use('/exercises', exerciseRoutes);
 router.use('/repetitions', repetitionRoutes);
+router.use('/faq', faq);
 
 module.exports = router;
