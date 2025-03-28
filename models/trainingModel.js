@@ -77,18 +77,30 @@ exports.getTrainingById = async (trainingId) => {
         [trainingId]
     );
 
-    // Grouper les exercices des sessions par session puis par exercice
+    // Calculer le tonnage pour chaque exercice et grouper par session et exercice
     const sessionExercisesGrouped = sessions.map(session => {
         const exercisesForSession = sessionExercises.filter(se => se.session_id === session.id);
         const exercisesGrouped = exercisesForSession.reduce((acc, se) => {
             const exerciseName = se.exercise_name;
+            const tonnage = se.reps * se.weight;  // Calcul du tonnage pour cette série (réps * poids)
             if (!acc[exerciseName]) {
-                acc[exerciseName] = [];
+                acc[exerciseName] = { total_tonnage: 0, sets: [] };
             }
-            acc[exerciseName].push({ reps: se.reps, weight: se.weight });
+            acc[exerciseName].sets.push({ reps: se.reps, weight: se.weight, tonnage });
+            acc[exerciseName].total_tonnage += tonnage;  // Ajouter le tonnage de cette série au total
             return acc;
         }, {});
-        return { ...session, exercises: exercisesGrouped };
+
+        // Calcul du tonnage total pour la session
+        const totalSessionTonnage = exercisesForSession.reduce((total, se) => {
+            return total + (se.reps * se.weight); // Somme de tous les tonnages pour cette session
+        }, 0);
+
+        return {
+            ...session,
+            exercises: exercisesGrouped,
+            total_tonnage_session: totalSessionTonnage // Ajouter le tonnage total de la session
+        };
     });
 
     // Construction de la réponse finale
