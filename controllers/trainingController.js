@@ -53,7 +53,7 @@ exports.getTrainingById = async (req, res) => {
             return res.status(404).json({ error: "Training non trouvé." });
         }
 
-        res.json(training);
+        res.json(training); // Réponse avec toutes les informations de l'entraînement
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Erreur serveur." });

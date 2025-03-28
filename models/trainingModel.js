@@ -37,7 +37,66 @@ exports.getTrainingById = async (trainingId) => {
         FROM trainings WHERE id = ? AND deleted_at IS NULL`,
         [trainingId]
     );
-    return training.length > 0 ? training[0] : null;
+
+    if (training.length === 0) return null;
+    const trainingData = training[0];
+
+    // 1. Récupérer les sessions d'entraînement (triées de la plus récente à la plus ancienne)
+    const [sessions] = await db.promise().query(
+        `SELECT * FROM training_sessions WHERE training_id = ? AND deleted_at IS NULL ORDER BY training_date DESC`,
+        [trainingId]
+    );
+
+    // 2. Récupérer les exercices associés à cet entraînement, groupés par muscle
+    const [exercises] = await db.promise().query(
+        `SELECT exercises.id, exercises.name, exercises.training_id, exercises.muscle_id, muscles.name AS muscle_name
+        FROM exercises
+        JOIN muscles ON exercises.muscle_id = muscles.id
+        WHERE exercises.training_id = ? AND exercises.deleted_at IS NULL`,
+        [trainingId]
+    );
+
+    // Grouper les exercices par muscle
+    const exercisesGroupedByMuscle = exercises.reduce((acc, exercise) => {
+        const muscleName = exercise.muscle_name;
+        if (!acc[muscleName]) {
+            acc[muscleName] = [];
+        }
+        acc[muscleName].push(exercise);
+        return acc;
+    }, {});
+
+    // 3. Récupérer les exercices des sessions (groupés par session et exercice)
+    const [sessionExercises] = await db.promise().query(
+        `SELECT tse.id, tse.session_id, tse.exercise_id, tse.reps, tse.weight, es.name AS exercise_name, ts.training_date
+        FROM training_session_exercise tse
+        JOIN training_sessions ts ON tse.session_id = ts.id
+        JOIN exercises es ON tse.exercise_id = es.id
+        WHERE ts.training_id = ? AND ts.deleted_at IS NULL
+        ORDER BY ts.training_date DESC`,
+        [trainingId]
+    );
+
+    // Grouper les exercices des sessions par session puis par exercice
+    const sessionExercisesGrouped = sessions.map(session => {
+        const exercisesForSession = sessionExercises.filter(se => se.session_id === session.id);
+        const exercisesGrouped = exercisesForSession.reduce((acc, se) => {
+            const exerciseName = se.exercise_name;
+            if (!acc[exerciseName]) {
+                acc[exerciseName] = [];
+            }
+            acc[exerciseName].push({ reps: se.reps, weight: se.weight });
+            return acc;
+        }, {});
+        return { ...session, exercises: exercisesGrouped };
+    });
+
+    // Construction de la réponse finale
+    return {
+        ...trainingData,
+        training_sessions: sessionExercisesGrouped,
+        exercises_by_muscle: exercisesGroupedByMuscle
+    };
 };
 
 // 📌 Supprimer un training
