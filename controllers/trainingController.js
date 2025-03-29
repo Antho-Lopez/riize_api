@@ -18,11 +18,18 @@ exports.createTraining = async (req, res) => {
 exports.updateTraining = async (req, res) => {
     try {
         const trainingId = req.params.id;
-        const { name, recurrence_type, recurrence_value, start_date, training_img } = req.body;
+        
+        // Supprime les champs undefined ou null du body
+        const updates = {};
+        ["name", "recurrence_type", "recurrence_value", "start_date", "training_img"].forEach(field => {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        });
 
-        const updated = await trainingModel.updateTraining(trainingId, name, recurrence_type, recurrence_value, start_date, training_img);
+        const updated = await trainingModel.updateTraining(trainingId, updates);
         if (!updated) {
-            return res.status(404).json({ error: "Training non trouvé." });
+            return res.status(404).json({ error: "Training non trouvé ou aucun champ mis à jour." });
         }
 
         res.json({ message: "Training mis à jour avec succès." });

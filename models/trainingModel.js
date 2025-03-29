@@ -11,15 +11,21 @@ exports.createTraining = async (userId, name, recurrence_type, recurrence_value,
 };
 
 // 📌 Mettre à jour un training
-exports.updateTraining = async (trainingId, name, recurrence_type, recurrence_value, start_date, training_img) => {
-    const [result] = await db.promise().query(
-        `UPDATE trainings SET name = ?, recurrence_type = ?, recurrence_value = ?, start_date = ?, training_img = ?
-        WHERE id = ? AND deleted_at IS NULL`,
-        [name, recurrence_type, recurrence_value, start_date, training_img, trainingId]
-    );
+exports.updateTraining = async (trainingId, updates) => {
+    // Vérifier si l'objet updates est vide
+    if (Object.keys(updates).length === 0) {
+        return false;
+    }
+
+    // Construire dynamiquement la requête SQL
+    const fields = Object.keys(updates).map(field => `${field} = ?`).join(', ');
+    const values = Object.values(updates);
+
+    const query = `UPDATE trainings SET ${fields} WHERE id = ? AND deleted_at IS NULL`;
+    
+    const [result] = await db.promise().query(query, [...values, trainingId]);
     return result.affectedRows > 0;
 };
-
 // 📌 Récupérer la liste des trainings d'un utilisateur
 exports.getUserTrainings = async (userId) => {
     const [trainings] = await db.promise().query(
