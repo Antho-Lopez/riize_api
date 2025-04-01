@@ -7,7 +7,7 @@ API pour l'application mobile "Riize"
 ## Versions
 - Node : 22.13.0
 - npm : 10.9.2
-- Express : 4.21.2
+- Express : 5.1.0
 
 ## Installation
 
@@ -30,6 +30,7 @@ Initialiser npm sur le projet et installer les dépendences
   JsonWebToken
   BcryptJS
   GoogleAuthLibrary
+  formidable
 ```
 
 ## Serveur

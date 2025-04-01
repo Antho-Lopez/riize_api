@@ -4,6 +4,7 @@ const userController = require('../controllers/userController');
 const authMiddleware = require('../middleware/authMiddleware'); 
 const isAdminMiddleware = require('../middleware/isAdminMiddleware'); 
 const canAccessResource = require('../middleware/canAccessResource');
+const upload = require('../middleware/upload');
 
 // Récupérer le profil de l'utilisateur connecté
 router.get('/me', authMiddleware, userController.getUserProfile);
@@ -25,5 +26,7 @@ router.get('/weight-history/:id', authMiddleware, canAccessResource('users', 'id
 
 // Récupérer uniquement la streak d'un utilisateur (propriétaire ou admin)
 router.get('/streak/:id', authMiddleware, canAccessResource('users', 'id'), userController.getUserStreak);
+
+router.put('/upload-profile-picture/:id', authMiddleware, canAccessResource('users', 'id'), upload, userController.uploadProfilePicture);
 
 module.exports = router;
