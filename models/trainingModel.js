@@ -30,7 +30,9 @@ exports.updateTraining = async (trainingId, updates) => {
 exports.getUserTrainings = async (userId) => {
     const [trainings] = await db.promise().query(
         `SELECT id, name, recurrence_type, recurrence_value, start_date, training_img, created_at, updated_at 
-        FROM trainings WHERE user_id = ? AND deleted_at IS NULL`,
+        FROM trainings 
+        WHERE user_id = ? AND deleted_at IS NULL
+        ORDER BY id DESC`,
         [userId]
     );
     return trainings;
