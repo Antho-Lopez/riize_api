@@ -7,6 +7,7 @@ const swaggerDocument = require("./swagger");
 
 const app = express();
 const port = process.env.PORT || 3000;
+const path = require('path');
 
 // Middleware global
 app.use(cors());
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // Routes
 app.use('/api', routes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Démarrer le serveur
 app.listen(port, () => {
