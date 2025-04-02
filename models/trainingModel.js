@@ -130,49 +130,54 @@ exports.deleteTraining = async (trainingId) => {
 exports.getTodayTraining = async (userId) => {
     const query = `
         SELECT 
-        t.id AS training_id,
-        t.user_id,
-        t.name AS training_name,
-        t.recurrence_type,
-        t.recurrence_value,
-        t.start_date,
-        t.training_img,
-        t.created_at,
-        t.updated_at,
-        IFNULL(
-            JSON_ARRAYAGG(
-            CASE 
-                WHEN e.id IS NOT NULL THEN JSON_OBJECT(
-                'exercise_id', e.id,
-                'exercise_name', e.name,
-                'default_weight', e.default_weight,
-                'muscle', JSON_OBJECT(
-                    'muscle_id', m.id,
-                    'muscle_name', m.name
-                )
-                )
-            END
-            ),
-            JSON_ARRAY()
-        ) AS exercises
+            t.id AS training_id,
+            t.user_id,
+            t.name AS training_name,
+            t.recurrence_type,
+            t.recurrence_value,
+            t.start_date,
+            t.training_img,
+            t.created_at,
+            t.updated_at,
+            IFNULL(
+                JSON_ARRAYAGG(
+                CASE 
+                    WHEN e.id IS NOT NULL THEN JSON_OBJECT(
+                    'exercise_id', e.id,
+                    'exercise_name', e.name,
+                    'default_weight', e.default_weight,
+                    'muscle', JSON_OBJECT(
+                        'muscle_id', m.id,
+                        'muscle_name', m.name
+                    )
+                    )
+                END
+                ),
+                JSON_ARRAY()
+            ) AS exercises
         FROM trainings t
         LEFT JOIN exercises e ON e.training_id = t.id AND e.deleted_at IS NULL
         LEFT JOIN muscles m ON e.muscle_id = m.id
         WHERE t.user_id = ?
         AND t.deleted_at IS NULL
-        AND t.start_date IS NOT NULL
-        AND CURDATE() >= t.start_date
         AND (
-            (t.recurrence_type = 'daily' 
-            AND DATEDIFF(CURDATE(), t.start_date) % IFNULL(CAST(t.recurrence_value AS UNSIGNED), 1) = 0
-            )
-            OR
-            (t.recurrence_type = 'weekly' 
-            AND WEEKDAY(CURDATE()) = WEEKDAY(t.start_date)
-            )
+            -- Si start_date n'est pas NULL, on vérifie la date
+            (t.start_date IS NOT NULL AND CURDATE() >= t.start_date
+            AND (
+                (t.recurrence_type = 'daily' 
+                AND DATEDIFF(CURDATE(), t.start_date) % IFNULL(CAST(t.recurrence_value AS UNSIGNED), 1) = 0)
+                OR
+                (t.recurrence_type = 'weekly' 
+                AND WEEKDAY(CURDATE()) = WEEKDAY(t.start_date))
+            ))
+            -- Si start_date est NULL, on vérifie uniquement la récurrence weekly
+            OR 
+            (t.start_date IS NULL 
+            AND t.recurrence_type = 'weekly' 
+            AND t.recurrence_value = DAYNAME(CURDATE()))
         )
         GROUP BY t.id
-        LIMIT 1
+        LIMIT 1;
     `;
 
     const [rows] = await db.promise().query(query, [userId]);
