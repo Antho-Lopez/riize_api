@@ -57,7 +57,7 @@ exports.getTrainingById = async (trainingId) => {
 
     // 2. Récupérer les exercices associés à cet entraînement, groupés par muscle
     const [exercises] = await db.promise().query(
-        `SELECT exercises.id, exercises.name, exercises.training_id, exercises.muscle_id, muscles.name AS muscle_name
+        `SELECT exercises.id, exercises.name, exercises.default_weight, exercises.training_id, exercises.muscle_id, muscles.name AS muscle_name
         FROM exercises
         JOIN muscles ON exercises.muscle_id = muscles.id
         WHERE exercises.training_id = ? AND exercises.deleted_at IS NULL`,
