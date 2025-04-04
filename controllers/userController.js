@@ -119,8 +119,42 @@ exports.getUserStreak = (req, res) => {
             return res.status(404).json({ error: "Utilisateur non trouvé" });
         }
 
-        res.json({ streak: results[0].streak });
+        const currentStreak = results[0].streak;
+
+        db.query(`
+            SELECT date 
+            FROM user_streak_logs 
+            WHERE user_id = ? 
+            ORDER BY date DESC 
+            LIMIT 7
+        `, [id], (logErr, logs) => {
+            if (logErr) {
+                console.error("Erreur SQL (logs) :", logErr);
+                return res.status(500).json({ error: "Erreur lors de la récupération de l'historique de streak" });
+            }
+
+            const dates = logs.map(log => log.date);
+
+            res.json({
+                streak: currentStreak,
+                history: dates
+            });
+        });
     });
+};
+
+
+exports.addUserStreak = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        await userModel.addUserStreak(userId);
+
+        res.status(200).json({ message: "Streak mis à jour avec succès." });
+    } catch (err) {
+        console.error("Erreur lors de la mise à jour du streak :", err);
+        res.status(500).json({ error: "Erreur serveur lors de la mise à jour du streak." });
+    }
 };
 
 // Dans ton contrôleur

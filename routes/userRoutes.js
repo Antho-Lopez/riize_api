@@ -27,6 +27,8 @@ router.get('/weight-history/:id', authMiddleware, canAccessResource('users', 'id
 // Récupérer uniquement la streak d'un utilisateur (propriétaire ou admin)
 router.get('/streak/:id', authMiddleware, canAccessResource('users', 'id'), userController.getUserStreak);
 
+router.post('/streak/add', authMiddleware, userController.addUserStreak);
+
 router.put('/upload-profile-picture/:id', authMiddleware, canAccessResource('users', 'id'), upload, userController.uploadProfilePicture);
 
 module.exports = router;
