@@ -187,6 +187,7 @@ exports.getTodayCompletedSession = async (userId) => {
             AND ts.training_date = CURDATE()
             AND ts.end_time IS NOT NULL
             AND ts.deleted_at IS NULL
+        ORDER BY ts.start_time DESC
         LIMIT 1
     `;
 
