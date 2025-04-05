@@ -133,7 +133,10 @@ exports.getUserStreak = (req, res) => {
                 return res.status(500).json({ error: "Erreur lors de la récupération de l'historique de streak" });
             }
 
-            const dates = logs.map(log => log.date);
+            const timeZone = 'Europe/Paris';
+            const dates = logs.map(log => 
+                new Date(log.date).toLocaleDateString('en-CA', { timeZone })
+            );
 
             res.json({
                 streak: currentStreak,

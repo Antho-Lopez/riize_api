@@ -120,9 +120,10 @@ exports.addUserStreak = async (userId) => {
     // Créer un objet Date pour la dernière date de log
     const lastDateObj = lastDateStr ? new Date(lastDateStr) : null;
 
-    // Si la dernière séance est déjà aujourd'hui, on ne fait rien
-    if (lastDateStr === todayStr) {
-        return; 
+    const lastDateFormatted = new Date(lastDateStr).toLocaleDateString('en-CA', { timeZone });
+    
+    if (lastDateFormatted === todayStr) {
+        return;
     }
     
     let newStreak = 1;
@@ -145,7 +146,7 @@ exports.addUserStreak = async (userId) => {
             newStreak = 1;
         }
     }
-    // Mise à jour de la BDD (décommenter pour l'exécution réelle)
+
     await db.promise().query(`
         UPDATE users SET streak = ? WHERE id = ?
     `, [newStreak, userId]);
