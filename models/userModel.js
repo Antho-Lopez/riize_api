@@ -118,8 +118,8 @@ exports.addUserStreak = async (userId) => {
     // lastDateStr sera au format "YYYY-MM-DD"
     const lastDateStr = lastLog ? lastLog.date : null;
     // Créer un objet Date pour la dernière date de log
-    const lastDateObj = lastDateStr ? new Date(lastDateStr + 'T00:00:00') : null;
-    
+    const lastDateObj = lastDateStr ? new Date(lastDateStr) : null;
+
     // Si la dernière séance est déjà aujourd'hui, on ne fait rien
     if (lastDateStr === todayStr) {
         return; 
