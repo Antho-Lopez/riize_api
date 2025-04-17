@@ -63,30 +63,51 @@ module.exports = (token) => `
                     font-size: 14px;
                     text-align: center;
                 }
+                .error {
+                    color: #FF5733;
+                    font-size: 14px;
+                    margin-top: 10px;
+                }
             </style>
         </head>
         <body>
             <div class="container">
                 <h1>Riize</h1>
                 <h2>Réinitialiser votre mot de passe</h2>
-                <form method="POST" action="/api/auth/reset-password-form">
-                <input type="hidden" name="token" value="${token}" />
-                
-                <label for="newPassword">Nouveau mot de passe :</label>
-                <div class="password-container">
-                    <input type="password" name="newPassword" id="newPassword" required />
-                    <span class="toggle-password" onclick="togglePassword()">voir</span>
-                </div>
-                
-                <button type="submit">Valider</button>
-                <p class="info">Ce lien est valable pendant 30 minutes.</p>
+
+                <form method="POST" action="/api/auth/reset-password-form" onsubmit="return validatePassword();">
+                    <input type="hidden" name="token" value="${token}" />
+
+                    <label for="newPassword">Nouveau mot de passe :</label>
+                    <div class="password-container">
+                        <input type="password" name="newPassword" id="newPassword" required />
+                        <span class="toggle-password" onclick="togglePassword()">voir</span>
+                    </div>
+                    
+                    <div id="errorMessage" class="error" style="display: none;">
+                        Le mot de passe doit contenir au moins 8 caractères.
+                    </div>
+
+                    <button type="submit">Valider</button>
+                    <p class="info">Ce lien est valable pendant 30 minutes.</p>
                 </form>
             </div>
 
             <script>
+
                 function togglePassword() {
-                const input = document.getElementById('newPassword');
-                input.type = input.type === 'password' ? 'text' : 'password';
+                    const input = document.getElementById('newPassword');
+                    input.type = input.type === 'password' ? 'text' : 'password';
+                }
+
+                function validatePassword() {
+                    const input = document.getElementById('newPassword');
+                    const error = document.getElementById('errorMessage');
+                    if (input.value.length < 8) {
+                        error.style.display = 'block';
+                        return false;
+                    }
+                    return true;
                 }
             </script>
         </body>

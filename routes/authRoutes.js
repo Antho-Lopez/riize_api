@@ -22,7 +22,7 @@ router.get('/reset-password-form', (req, res) => {
     res.send(renderResetForm(token)); 
 });
 
-// ✅ Traitement du formulaire
+// Traitement du formulaire
 router.post('/reset-password-form', async (req, res) => {
     const { token, newPassword } = req.body;
 
