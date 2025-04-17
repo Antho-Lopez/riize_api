@@ -17,8 +17,12 @@ module.exports = (token) => `
                     padding: 40px;
                     border-radius: 10px;
                 }
-                h2 {
+                h1 {
                     color: #8FFF00;
+                    margin-bottom: 25px;
+                    text-align: center;
+                }
+                h2 {
                     margin-bottom: 25px;
                     text-align: center;
                 }
@@ -63,6 +67,7 @@ module.exports = (token) => `
         </head>
         <body>
             <div class="container">
+                <h1>Riize</h1>
                 <h2>Réinitialiser votre mot de passe</h2>
                 <form method="POST" action="/api/auth/reset-password-form">
                 <input type="hidden" name="token" value="${token}" />
