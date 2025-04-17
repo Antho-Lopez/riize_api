@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 const userModel = require('../models/userModel');
+const { sendResetPasswordEmail } = require('../utils/mailer');
 require('dotenv').config();
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -205,5 +206,57 @@ exports.refreshToken = (req, res) => {
         res.json({ accessToken: newAccessToken });
     } catch (err) {
         return res.status(403).json({ error: 'Refresh Token invalide ou expiré' });
+    }
+};
+
+// 📩 Étape 1 - Demande de reset de mot de passe
+exports.requestResetPassword = async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) return res.status(400).json({ error: "Email requis" });
+
+    try {
+        const [userResult] = await db.promise().query("SELECT * FROM users WHERE email = ?", [email]);
+        if (userResult.length === 0) {
+            return res.status(404).json({ error: "Email introuvable" });
+        }
+
+        const user = userResult[0];
+
+        // Génère un token JWT valable 30 minutes
+        const resetToken = jwt.sign(
+            { id: user.id, email: user.email },
+            process.env.JWT_ACCESS_SECRET,
+            { expiresIn: "30m" }
+        );
+
+        // envoyer un email avec le token, mais pour l’instant on le retourne dans la réponse
+        await sendResetPasswordEmail(user.email, resetToken);
+        res.json({ message: "Email de réinitialisation envoyé." });
+
+    } catch (err) {
+        console.error("Erreur lors de la demande de reset :", err);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
+};
+
+// 🔐 Étape 2 - Réinitialisation du mot de passe
+exports.resetPassword = async (req, res) => {
+    const { resetToken, newPassword } = req.body;
+
+    if (!resetToken || !newPassword) {
+        return res.status(400).json({ error: "Token et nouveau mot de passe requis" });
+    }
+
+    try {
+        const decoded = jwt.verify(resetToken, process.env.JWT_ACCESS_SECRET);
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await db.promise().query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, decoded.id]);
+
+        res.json({ message: "Mot de passe mis à jour avec succès" });
+    } catch (err) {
+        console.error("Erreur reset password :", err);
+        res.status(403).json({ error: "Token invalide ou expiré" });
     }
 };

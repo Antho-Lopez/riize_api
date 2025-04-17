@@ -31,6 +31,7 @@ Initialiser npm sur le projet et installer les dépendences
   BcryptJS
   GoogleAuthLibrary
   formidable
+  nodeMailer
 ```
 
 ## Serveur

@@ -5,6 +5,7 @@ const routes = require('./routes');
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger");
 const errorHandler = require('./middleware/errorHandler');
+const bodyParser = require('body-parser');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -14,6 +15,7 @@ const path = require('path');
 app.use(cors());
 app.use(express.json());
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use(bodyParser.urlencoded({ extended: true }));
 // Routes
 app.use('/api', routes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
