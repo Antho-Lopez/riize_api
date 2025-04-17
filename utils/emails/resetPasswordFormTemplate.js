@@ -53,7 +53,7 @@ module.exports = (token) => `
                     padding: 12px;
                     font-weight: bold;
                     border: none;
-                    border-radius: 5px;
+                    border-radius: 22px;
                     cursor: pointer;
                     margin-top: 15px;
                 }
