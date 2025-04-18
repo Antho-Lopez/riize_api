@@ -6,7 +6,7 @@ const userModel = require('../models/userModel');
 const { sendResetPasswordEmail } = require('../utils/mailer');
 require('dotenv').config();
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(process.env.WEB_GOOGLE_CLIENT_ID);
 
 // Générer un token d'accès (expire vite)
 const generateAccessToken = (user) => {
@@ -27,20 +27,27 @@ const generateRefreshToken = (user) => {
 };
 
 // 🟢 Authentification avec Google
-// peut être qu'il faudra AJOUTER LE ROLE POUR L'AUTH GOOGLE ET APPLE
 exports.googleAuth = async (req, res) => {
     const { token } = req.body;
 
     try {
         const ticket = await client.verifyIdToken({
             idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID,
+            audience: process.env.WEB_GOOGLE_CLIENT_ID,
         });
 
-        const { email, name, sub } = ticket.getPayload(); // `sub` est l'ID unique Google
+        const { email, name, given_name, family_name, sub, email_verified } = ticket.getPayload();
+
+        if (!email_verified) {
+            return res.status(401).json({ error: 'Email non vérifié par Google' });
+        }
 
         db.query('SELECT * FROM users WHERE provider = "google" AND provider_id = ?', [sub], (err, results) => {
-            if (err) return res.status(500).json({ error: 'Erreur serveur' });
+            
+            if (err) {
+                console.error("Erreur SQL dans SELECT Google:", err);
+                return res.status(500).json({ error: 'Erreur serveur' });
+            };
 
             if (results.length > 0) {
                 // Utilisateur existant -> Générer un JWT
@@ -49,14 +56,16 @@ exports.googleAuth = async (req, res) => {
                 const refreshToken = generateRefreshToken(user);
                 return res.json({ accessToken, refreshToken });
             } else {
-                // Nouvel utilisateur -> On l'inscrit
                 db.query(
-                    'INSERT INTO users (name, email, provider, provider_id) VALUES (?, ?, "google", ?)',
-                    [name, email, sub],
+                    'INSERT INTO users (name, lastname, email, provider, provider_id) VALUES (?, ?, ?, ?, ?)',
+                    [given_name || name, family_name || '', email, 'google', sub],
                     (err, result) => {
-                        if (err) return res.status(500).json({ error: 'Erreur serveur' });
+                        if (err) {
+                            console.error("Erreur SQL dans INSERT Google:", err);
+                            return res.status(500).json({ error: 'Erreur serveur' });
+                        }
 
-                        const user = { id: result.insertId, email };
+                        const user = { id: result.insertId, email, role: 'user'};
                         const accessToken = generateAccessToken(user);
                         const refreshToken = generateRefreshToken(user);
 
@@ -89,6 +98,7 @@ exports.appleAuth = async (req, res) => {
                 const refreshToken = generateRefreshToken(user);
                 return res.json({ accessToken, refreshToken });
             } else {
+                // maybe add name / lastname 
                 db.query(
                     'INSERT INTO users (email, provider, provider_id) VALUES (?, "apple", ?)',
                     [email, sub],
