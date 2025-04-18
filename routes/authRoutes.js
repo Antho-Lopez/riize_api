@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, refreshToken, googleAuth, appleAuth, requestResetPassword, resetPassword } = require('../controllers/authController');
+const { register, login, refreshToken, googleAuth, checkGoogleAccount, appleAuth, requestResetPassword, resetPassword } = require('../controllers/authController');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
@@ -10,6 +10,7 @@ const successPage = require('../utils/emails/successPage');
 const errorPage  = require('../utils/emails/errorPage');
 
 router.post('/google', googleAuth);
+router.post('/google/check', checkGoogleAccount);
 router.post('/apple', appleAuth);
 router.post('/register', register);
 router.post('/login', login);

@@ -36,46 +36,131 @@ exports.googleAuth = async (req, res) => {
             audience: process.env.WEB_GOOGLE_CLIENT_ID,
         });
 
-        const { email, name, given_name, family_name, sub, email_verified } = ticket.getPayload();
+        const payload = ticket.getPayload();
+        const {
+            email: googleEmail,
+            given_name,
+            family_name,
+            sub,
+            email_verified
+        } = payload;
 
         if (!email_verified) {
             return res.status(401).json({ error: 'Email non vérifié par Google' });
         }
 
-        db.query('SELECT * FROM users WHERE provider = "google" AND provider_id = ?', [sub], (err, results) => {
-            
-            if (err) {
-                console.error("Erreur SQL dans SELECT Google:", err);
-                return res.status(500).json({ error: 'Erreur serveur' });
-            };
+        // Récupère les données supplémentaires du formulaire frontend
+        const {
+            name,
+            lastname,
+            email,
+            provider_id,
+            final_goal_id,
+            download_reason_id,
+            download_from_id,
+            sex,
+            birth_date,
+            activity_frequency_id,
+            height,
+            weight,
+            weight_unit,
+            goal_weight,
+            height_unit
+        } = req.body;
 
-            if (results.length > 0) {
-                // Utilisateur existant -> Générer un JWT
-                const user = results[0];
-                const accessToken = generateAccessToken(user);
-                const refreshToken = generateRefreshToken(user);
-                return res.json({ accessToken, refreshToken });
-            } else {
-                db.query(
-                    'INSERT INTO users (name, lastname, email, provider, provider_id) VALUES (?, ?, ?, ?, ?)',
-                    [given_name || name, family_name || '', email, 'google', sub],
-                    (err, result) => {
-                        if (err) {
-                            console.error("Erreur SQL dans INSERT Google:", err);
-                            return res.status(500).json({ error: 'Erreur serveur' });
+        db.query(
+            'SELECT * FROM users WHERE provider = "google" AND provider_id = ?',
+            [sub],
+            (err, results) => {
+                if (err) {
+                    console.error("Erreur SQL dans SELECT Google:", err);
+                    return res.status(500).json({ error: 'Erreur serveur' });
+                }
+
+                if (results.length > 0) {
+                    // Utilisateur existant → JWT
+                    const user = results[0];
+                    const accessToken = generateAccessToken(user);
+                    const refreshToken = generateRefreshToken(user);
+                    return res.json({ accessToken, refreshToken });
+                } else {
+                    // Nouvel utilisateur → Inscription
+                    db.query(
+                        `INSERT INTO users 
+                            (name, lastname, email, provider, provider_id, final_goal_id, download_reason_id, download_from_id, sex, birth_date, activity_frequency_id, height, weight, weight_unit, goal_weight, height_unit, role)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [
+                            name || given_name || 'Utilisateur',
+                            lastname || family_name || '',
+                            email || googleEmail,
+                            'google',
+                            provider_id || sub,
+                            final_goal_id || null,
+                            download_reason_id || null,
+                            download_from_id || null,
+                            sex || null,
+                            birth_date || null,
+                            activity_frequency_id || null,
+                            height || null,
+                            weight || null,
+                            weight_unit || 'kg',
+                            goal_weight || null,
+                            height_unit || 'cm',
+                            'user'
+                        ],
+                        (err, result) => {
+                            if (err) {
+                                console.error("Erreur SQL dans INSERT Google:", err);
+                                return res.status(500).json({ error: 'Erreur serveur' });
+                            }
+
+                            const user = { id: result.insertId, email: email || googleEmail, role: 'user' };
+                            const accessToken = generateAccessToken(user);
+                            const refreshToken = generateRefreshToken(user);
+
+                            return res.status(201).json({ accessToken, refreshToken });
                         }
-
-                        const user = { id: result.insertId, email, role: 'user'};
-                        const accessToken = generateAccessToken(user);
-                        const refreshToken = generateRefreshToken(user);
-
-                        res.status(201).json({ accessToken, refreshToken });
-                    }
-                );
+                    );
+                }
             }
-        });
+        );
     } catch (err) {
+        console.error("Erreur Google verifyIdToken:", err);
         return res.status(401).json({ error: 'Token Google invalide' });
+    }
+};
+
+exports.checkGoogleAccount = async (req, res) => {
+    const { idToken } = req.body;
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.WEB_GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const provider_id = payload.sub;
+
+        db.query(
+            'SELECT * FROM users WHERE provider = "google" AND provider_id = ?',
+            [provider_id],
+            (err, results) => {
+                if (err) {
+                    console.error("Erreur SQL dans checkGoogleAccount :", err);
+                    return res.status(500).json({ error: 'Erreur serveur' });
+                }
+
+                if (results.length > 0) {
+                    return res.json({ accountExists: true });
+                } else {
+                    return res.json({ accountExists: false });
+                }
+            }
+        );
+    } catch (err) {
+        console.error("Erreur lors de la vérification du token Google :", err);
+        return res.status(400).json({ error: 'Token invalide ou utilisateur introuvable' });
     }
 };
 
