@@ -49,17 +49,6 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
-// Récupérer tous les utilisateurs
-exports.getAllUsers = async (req, res) => {
-    try {
-        const users = await userModel.findAll();
-        res.json(users);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Erreur serveur" });
-    }
-};
-
 exports.updateWeight = async (req, res) => {
     try {
         const userId = req.params.id; 

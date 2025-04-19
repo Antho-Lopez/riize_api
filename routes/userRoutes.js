@@ -15,9 +15,6 @@ router.put('/edit/:id', authMiddleware, canAccessResource('users', 'id'), userCo
 // Supprimer un utilisateur
 router.delete('/delete/:id', authMiddleware, canAccessResource('users', 'id'), userController.deleteUser);
 
-// Récupérer tous les utilisateurs (Admin seulement)
-router.get('/', authMiddleware, isAdminMiddleware, userController.getAllUsers);
-
 // Gestion de l'historique de poids de l'utilisateur
 router.post('/update-weight/:id', authMiddleware, canAccessResource('users', 'id'), userController.updateWeight);
 
