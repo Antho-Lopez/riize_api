@@ -26,7 +26,7 @@ const generateRefreshToken = (user) => {
     );
 };
 
-// 🟢 Authentification avec Google
+// Authentification avec Google
 exports.googleAuth = async (req, res) => {
     const { token } = req.body;
 
@@ -169,71 +169,124 @@ exports.appleAuth = async (req, res) => {
     const { token } = req.body;
 
     try {
-        const decoded = jwt.verify(token, process.env.APPLE_PUBLIC_KEY, { algorithms: ['RS256'] });
+        // Vérifie et décode le token Apple
+        const decoded = jwt.decode(token, { complete: true });
+        if (!decoded) return res.status(401).json({ error: 'Token Apple invalide' });
 
-        const email = decoded.email;
-        const sub = decoded.sub; // ID unique Apple
+        const { email, sub } = decoded.payload;
 
-        db.query('SELECT * FROM users WHERE provider = "apple" AND provider_id = ?', [sub], (err, results) => {
-            if (err) return res.status(500).json({ error: 'Erreur serveur' });
+        // Données supplémentaires du formulaire (si fournies)
+        const {
+            name,
+            lastname,
+            email: emailFromForm,
+            provider_id,
+            final_goal_id,
+            download_reason_id,
+            download_from_id,
+            sex,
+            birth_date,
+            activity_frequency_id,
+            height,
+            weight,
+            weight_unit,
+            goal_weight,
+            height_unit
+        } = req.body;
+        
+        // Vérifie si l'utilisateur Apple existe déjà
+        db.query(
+            'SELECT * FROM users WHERE provider = "apple" AND provider_id = ?',
+            [sub],
+            (err, results) => {
+                if (err) {
+                    console.error("Erreur SQL dans SELECT Apple:", err);
+                    return res.status(500).json({ error: 'Erreur serveur' });
+                }
 
-            if (results.length > 0) {
-                const user = results[0];
-                const accessToken = generateAccessToken(user);
-                const refreshToken = generateRefreshToken(user);
-                return res.json({ accessToken, refreshToken });
-            } else {
-                // maybe add name / lastname 
-                db.query(
-                    'INSERT INTO users (email, provider, provider_id) VALUES (?, "apple", ?)',
-                    [email, sub],
-                    (err, result) => {
-                        if (err) return res.status(500).json({ error: 'Erreur serveur' });
+                if (results.length > 0) {
+                    // Utilisateur existant → Connexion
+                    const user = results[0];
+                    const accessToken = generateAccessToken(user);
+                    const refreshToken = generateRefreshToken(user);
+                    return res.json({ accessToken, refreshToken });
+                } else {
+                    // Nouvel utilisateur → Inscription
+                    db.query(
+                        `INSERT INTO users 
+                            (name, lastname, email, provider, provider_id, final_goal_id, download_reason_id, download_from_id, sex, birth_date, activity_frequency_id, height, weight, weight_unit, goal_weight, height_unit, role)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [
+                            name || 'Utilisateur',
+                            lastname || '',
+                            emailFromForm || email,
+                            'apple',
+                            provider_id || sub,
+                            final_goal_id || null,
+                            download_reason_id || null,
+                            download_from_id || null,
+                            sex || 'male',
+                            birth_date || null,
+                            activity_frequency_id || null,
+                            height || null,
+                            weight || null,
+                            weight_unit || 'kg',
+                            goal_weight || null,
+                            height_unit || 'cm',
+                            'user'
+                        ],
+                        (err, result) => {
+                            if (err) {
+                                console.error("Erreur SQL dans INSERT Apple:", err);
+                                return res.status(500).json({ error: 'Erreur serveur' });
+                            }
 
-                        const user = { id: result.insertId, email };
-                        const accessToken = generateAccessToken(user);
-                        const refreshToken = generateRefreshToken(user);
+                            const user = { id: result.insertId, email: emailFromForm || email, role: 'user' };
+                            const accessToken = generateAccessToken(user);
+                            const refreshToken = generateRefreshToken(user);
 
-                        res.status(201).json({ accessToken, refreshToken });
-                    }
-                );
+                            return res.status(201).json({ accessToken, refreshToken });
+                        }
+                    );
+                }
             }
-        });
+        );
     } catch (err) {
+        console.error("Erreur AppleAuth:", err);
         return res.status(401).json({ error: 'Token Apple invalide' });
     }
 };
 
-// 🔐 Inscription
+// Inscription
 exports.register = async (req, res) => {
     try {
-        // 🔄 Fusionner les valeurs reçues avec les valeurs par défaut
+        // Fusionner les valeurs reçues avec les valeurs par défaut
         const userData = {...req.body };
 
-        // 🛑 Vérification des champs obligatoires
+        // Vérification des champs obligatoires
         if (!userData.email || (!userData.password && userData.provider === 'local')) {
             return res.status(400).json({ error: 'Email et mot de passe requis' });
         }
 
-        // 🔍 Vérifier si l'utilisateur existe déjà
+        // Vérifier si l'utilisateur existe déjà
         const [existingUser] = await db.promise().query('SELECT * FROM users WHERE email = ?', [userData.email]);
         if (existingUser.length > 0) {
             return res.status(400).json({ error: 'Cet email est déjà utilisé' });
         }
 
-        // 🔐 Hasher le mot de passe seulement si l'inscription est "local"
+        // Hasher le mot de passe seulement si l'inscription est "local"
         if (userData.provider === 'local') {
             userData.password = await bcrypt.hash(userData.password, 10);
         } else {
             userData.password = null; // Pour Google/Apple, pas besoin de mot de passe
         }
 
-        // 📝 Génération des clés et valeurs dynamiquement
+        // Génération des clés et valeurs dynamiquement
         const columns = Object.keys(userData).join(', ');
         const placeholders = Object.keys(userData).map(() => '?').join(', ');
         const values = Object.values(userData);
 
-        // 💾 Insertion dans la BDD
+        // Insertion dans la BDD
         const [result] = await db.promise().query(
             `INSERT INTO users (${columns}) VALUES (${placeholders})`,
             values
@@ -241,7 +294,7 @@ exports.register = async (req, res) => {
         
         await userModel.addInitialWeight(result.insertId, userData.weight);
 
-        // 🔑 Génération des tokens
+        // Génération des tokens
         const user = { id: result.insertId, email: userData.email, role: userData.role };
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
@@ -253,7 +306,7 @@ exports.register = async (req, res) => {
     }
 };
 
-// 🔑 Connexion
+// Connexion
 exports.login = (req, res) => {
     const { email, password } = req.body;
 
@@ -286,7 +339,7 @@ exports.login = (req, res) => {
 };
 
 
-// 🔄 Rafraîchir un token
+// Rafraîchir un token
 exports.refreshToken = (req, res) => {
     const { refreshToken } = req.body;
 
@@ -304,7 +357,7 @@ exports.refreshToken = (req, res) => {
     }
 };
 
-// 📩 Étape 1 - Demande de reset de mot de passe
+// Étape 1 - Demande de reset de mot de passe
 exports.requestResetPassword = async (req, res) => {
     const { email } = req.body;
 
@@ -335,7 +388,7 @@ exports.requestResetPassword = async (req, res) => {
     }
 };
 
-// 🔐 Étape 2 - Réinitialisation du mot de passe
+// Étape 2 - Réinitialisation du mot de passe
 exports.resetPassword = async (req, res) => {
     const { resetToken, newPassword } = req.body;
 
