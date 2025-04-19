@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendResetPasswordEmail = async (to, token) => {
-    const resetUrl = `http://localhost:3000/api/auth/reset-password-form?token=${token}`;
+    const resetUrl = `${process.env.BASE_URL}/api/auth/reset-password-form?token=${token}`;
     const html = generateTemplate(resetUrl); // appel du template
 
     const mailOptions = {

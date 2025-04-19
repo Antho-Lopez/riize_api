@@ -113,6 +113,16 @@ exports.googleAuth = async (req, res) => {
                                 console.error("Erreur SQL dans INSERT Google:", err);
                                 return res.status(500).json({ error: 'Erreur serveur' });
                             }
+                            
+                            const userId = result.insertId;
+
+                            try {
+                                if (weight) {
+                                    userModel.addInitialWeight(userId, weight);
+                                };
+                            } catch (error) {
+                                console.error("Erreur lors de l'ajout du poids initial (Google):", error);
+                            }
 
                             const user = { id: result.insertId, email: email || googleEmail, role: 'user' };
                             const accessToken = generateAccessToken(user);
@@ -241,6 +251,16 @@ exports.appleAuth = async (req, res) => {
                                 return res.status(500).json({ error: 'Erreur serveur' });
                             }
 
+                            const userId = result.insertId;
+                            try {
+                                if (weight) {
+                                    userModel.addInitialWeight(userId, weight);
+                                };
+                            } catch (error) {
+                                console.error("Erreur lors de l'ajout du poids initial (Apple):", error);
+                                // Tu peux décider si tu veux continuer malgré l’erreur ou non
+                            }
+
                             const user = { id: result.insertId, email: emailFromForm || email, role: 'user' };
                             const accessToken = generateAccessToken(user);
                             const refreshToken = generateRefreshToken(user);
@@ -253,6 +273,28 @@ exports.appleAuth = async (req, res) => {
         );
     } catch (err) {
         console.error("Erreur AppleAuth:", err);
+        return res.status(401).json({ error: 'Token Apple invalide' });
+    }
+};
+
+exports.checkAppleAccount = async (req, res) => {
+    try {
+        const { token } = req.body;
+        const decoded = jwt.decode(token, { complete: true });
+        if (!decoded) return res.status(401).json({ error: 'Token Apple invalide' });
+
+        const { sub } = decoded.payload;
+
+        db.query(
+            'SELECT id FROM users WHERE provider = "apple" AND provider_id = ?',
+            [sub],
+            (err, results) => {
+                if (err) return res.status(500).json({ error: 'Erreur serveur' });
+                return res.json({ exists: results.length > 0 });
+            }
+        );
+    } catch (error) {
+        console.error("Erreur AppleAuth check:", error);
         return res.status(401).json({ error: 'Token Apple invalide' });
     }
 };
