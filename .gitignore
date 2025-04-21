@@ -1,4 +1,5 @@
 node_modules/
 sql/
 .env
-uploads/
+uploads/*
+!uploads/.gitkeep
