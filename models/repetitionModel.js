@@ -75,14 +75,14 @@ exports.updateRepetition = async (id, updates) => {
     return result.affectedRows > 0;
 };
 
-// 📌 Supprimer (soft delete)
-exports.deleteRepetition = async (id) => {
-    const [result] = await db.promise().query(
-        `DELETE FROM training_session_exercise WHERE id = ?`,
-        [id]
-    );
-    return result.affectedRows > 0;
-};
+// 📌 Supprimer
+// exports.deleteRepetition = async (id) => {
+//     const [result] = await db.promise().query(
+//         `DELETE FROM training_session_exercise WHERE id = ?`,
+//         [id]
+//     );
+//     return result.affectedRows > 0;
+// };
 
 // 📌 Récupérer les exercices d'une session
 exports.getRepetitionsBySessionId = async (sessionId) => {

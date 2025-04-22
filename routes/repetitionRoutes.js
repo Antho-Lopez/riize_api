@@ -9,8 +9,8 @@ router.post('/create', authMiddleware, repetitionController.createRepetition);
 // 📌 Modifier une repetition (propriétaire ou admin)
 router.put('/edit/:id', authMiddleware, repetitionController.updateRepetition);
 
-// 📌 Supprimer une repetition
-router.delete('/delete/:id', authMiddleware, repetitionController.deleteRepetition);
+// // 📌 Supprimer une repetition
+// router.delete('/delete/:id', authMiddleware, repetitionController.deleteRepetition);
 
 // 📌 Voir la liste des repetition d'une session (propriétaire ou admin)
 router.get('/by-session/:session_id', authMiddleware, repetitionController.getRepetitionsBySessionId);
