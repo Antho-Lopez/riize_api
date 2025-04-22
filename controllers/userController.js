@@ -165,7 +165,7 @@ exports.uploadProfilePicture = async (req, res) => {
         const resizedPath = uploadedFile.filepath.replace(/(\.\w+)$/, '-resized$1');
         await sharp(uploadedFile.filepath)
             .resize({ width: 800 }) // adapte la largeur max (800px ici)
-            .jpeg({ quality: 70 }) // compression JPEG à 70%
+            .jpeg({ quality: 80 }) // compression JPEG à 80%
             .toFile(resizedPath);
 
         // Envoi vers Hostinger
