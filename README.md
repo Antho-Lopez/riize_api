@@ -30,8 +30,10 @@ Initialiser npm sur le projet et installer les dépendences
   JsonWebToken
   BcryptJS
   GoogleAuthLibrary
-  formidable
-  nodeMailer
+  Formidable
+  NodeMailer
+  Axios
+  Form-data
 ```
 
 ## Serveur

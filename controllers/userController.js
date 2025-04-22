@@ -2,6 +2,8 @@ const userModel = require('../models/userModel');
 const db = require('../db');
 const fs = require('fs');
 const path = require('path');
+const axios = require('axios');
+const FormData = require('form-data');
 
 // Récupérer le profil d'un utilisateur connecté
 exports.getUserProfile = async (req, res) => {
@@ -149,50 +151,47 @@ exports.addUserStreak = async (req, res) => {
     }
 };
 
-// Dans ton contrôleur
 exports.uploadProfilePicture = async (req, res) => {
     try {
-
         const userId = req.params.id;
-
-        // Vérifie si req.file est un tableau et accède au premier fichier
         const uploadedFile = req.file && req.file[0];
 
         if (!uploadedFile || !uploadedFile.filepath) {
             return res.status(400).json({ error: 'Fichier non valide' });
         }
 
-        // Chemin de l'image dans le dossier 'uploads'
-        const imagePath = `/uploads/${path.basename(uploadedFile.filepath)}`;
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(uploadedFile.filepath));
 
-        // 🔄 Mise à jour du profil utilisateur
+        const uploadResponse = await axios.post(
+            'https://app.riize.eu/upload.php',
+            formData,
+            {
+                headers: {
+                    ...formData.getHeaders(),
+                    'X-Upload-Key': process.env.SECRET_UPLOAD_KEY
+                }
+            }
+        );
+
+        const imageUrl = uploadResponse.data.url;
+
         const user = await userModel.findById(userId);
         if (!user) {
             return res.status(404).json({ error: "Utilisateur non trouvé." });
         }
 
-        // Suppression de l'ancienne image si elle existe
-        if (user.profilePicture) {
-            const oldImagePath = path.join(__dirname, '..', user.profilePicture);
-            if (fs.existsSync(oldImagePath)) {
-                fs.unlinkSync(oldImagePath);
-            }
-        }
-
-        // Mise à jour de l'utilisateur avec le nouveau chemin d'image
-        user.profilePicture = imagePath;
-        
-        // Mettre à jour l'utilisateur dans la base de données
-        const data = { profile_picture: imagePath };
+        user.profilePicture = imageUrl;
+        const data = { profile_picture: imageUrl };
         const updateResult = await userModel.updateById(userId, data);
 
         if (!updateResult) {
             return res.status(500).json({ error: "Erreur lors de la mise à jour du profil." });
         }
 
-        res.status(200).json({ message: 'Photo de profil mise à jour avec succès.' });
+        res.status(200).json({ message: 'Photo de profil mise à jour avec succès.', imageUrl });
     } catch (error) {
-        console.error("Erreur lors de l'upload :", error);
+        console.error("Erreur lors de l'upload :", error.message);
         res.status(500).json({ error: "Erreur interne du serveur." });
     }
 };
