@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const FormData = require('form-data');
+const sharp = require('sharp');
 
 // Récupérer le profil d'un utilisateur connecté
 exports.getUserProfile = async (req, res) => {
@@ -160,8 +161,16 @@ exports.uploadProfilePicture = async (req, res) => {
             return res.status(400).json({ error: 'Fichier non valide' });
         }
 
+        // Réduire l'image avec sharp
+        const resizedPath = uploadedFile.filepath.replace(/(\.\w+)$/, '-resized$1');
+        await sharp(uploadedFile.filepath)
+            .resize({ width: 800 }) // adapte la largeur max (800px ici)
+            .jpeg({ quality: 70 }) // compression JPEG à 70%
+            .toFile(resizedPath);
+
+        // Envoi vers Hostinger
         const formData = new FormData();
-        formData.append('file', fs.createReadStream(uploadedFile.filepath));
+        formData.append('file', fs.createReadStream(resizedPath));
 
         const uploadResponse = await axios.post(
             'https://app.riize.eu/upload.php',
@@ -180,7 +189,7 @@ exports.uploadProfilePicture = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: "Utilisateur non trouvé." });
         }
-
+        // Mettre à jour l'utilisateur avec le nouveau lien
         user.profilePicture = imageUrl;
         const data = { profile_picture: imageUrl };
         const updateResult = await userModel.updateById(userId, data);
