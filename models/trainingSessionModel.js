@@ -111,7 +111,7 @@ exports.getCurrentSession = async (userId) => {
         WHERE t.user_id = ? 
             AND ts.start_time IS NOT NULL 
             AND ts.end_time IS NULL
-        ORDER BY ts.start_time DESC`,
+        ORDER BY ts.start_time DESC, tse.id ASC`,
         [userId]
     );
 
