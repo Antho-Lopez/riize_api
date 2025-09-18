@@ -85,29 +85,46 @@ exports.getTrainingById = async (trainingId) => {
         [trainingId]
     );
 
-    // Calculer le tonnage pour chaque exercice et grouper par session et exercice
+    // Calculer le tonnage pour chaque exercice et grouper par session et exercice (clé = exercise_id)
     const sessionExercisesGrouped = sessions.map(session => {
         const exercisesForSession = sessionExercises.filter(se => se.session_id === session.id);
+
         const exercisesGrouped = exercisesForSession.reduce((acc, se) => {
-            const exerciseName = se.exercise_name;
-            const tonnage = se.reps * se.weight;  // Calcul du tonnage pour cette série (réps * poids)
-            if (!acc[exerciseName]) {
-                acc[exerciseName] = { total_tonnage: 0, sets: [] };
+            const exerciseKey = se.exercise_id; // Clé unique basée sur l'ID
+            if (!acc[exerciseKey]) {
+                acc[exerciseKey] = { 
+                    exercise_id: se.exercise_id,
+                    exercise_name: se.exercise_name,
+                    total_tonnage: 0,
+                    sets: [] 
+                };
             }
-            acc[exerciseName].sets.push({ reps: se.reps, weight: se.weight, tonnage });
-            acc[exerciseName].total_tonnage += tonnage;  // Ajouter le tonnage de cette série au total
+
+            const tonnage = se.reps * se.weight;
+            acc[exerciseKey].sets.push({ reps: se.reps, weight: se.weight, tonnage });
+            acc[exerciseKey].total_tonnage += tonnage;
+
+            return acc;
+        }, {});
+
+        // On transforme en objet avec le nom (et l’ID pour éviter les doublons)
+        const exercisesByName = Object.values(exercisesGrouped).reduce((acc, ex) => {
+            acc[`${ex.exercise_name} (#${ex.exercise_id})`] = {
+                total_tonnage: ex.total_tonnage,
+                sets: ex.sets
+            };
             return acc;
         }, {});
 
         // Calcul du tonnage total pour la session
         const totalSessionTonnage = exercisesForSession.reduce((total, se) => {
-            return total + (se.reps * se.weight); // Somme de tous les tonnages pour cette session
+            return total + (se.reps * se.weight);
         }, 0);
 
         return {
             ...session,
-            exercises: exercisesGrouped,
-            total_tonnage_session: totalSessionTonnage // Ajouter le tonnage total de la session
+            exercises: exercisesByName,
+            total_tonnage_session: totalSessionTonnage
         };
     });
 
